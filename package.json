@@ -1,0 +1,28 @@
+{
+  "name": "controle-visitas-usina-lins",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MVP demonstrável de controle de visitas externas da Usina Lins",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c green,cyan \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev -w @lins/api",
+    "dev:web": "npm run dev -w @lins/web",
+    "build": "npm run build -w @lins/web",
+    "start": "npm run start -w @lins/api",
+    "demo": "npm run build && npm run start",
+    "test": "npm run test -w @lins/api",
+    "typecheck": "npm run typecheck -ws --if-present",
+    "check": "npm run typecheck && npm run test && npm run build"
+  },
+  "engines": {
+    "node": ">=22.16"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
