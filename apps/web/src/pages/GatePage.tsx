@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
   OUTCOME_LABELS,
   type GateVisitDto,
@@ -22,6 +22,18 @@ const outcomeOptions: IdentityOutcome[] = [
   "UNAVAILABLE",
 ];
 
+type ScanPhase = "idle" | "positioning" | "capturing" | "comparing";
+
+const SCAN_PHASE_LABELS: Record<Exclude<ScanPhase, "idle">, string> = {
+  positioning: "Posicione o rosto na moldura simulada.",
+  capturing: "Capturando padrão facial simulado…",
+  comparing: "Comparando com o cadastro sintético…",
+};
+
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
 export function GatePage() {
   const [visits, setVisits] = useState<GateVisitDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +45,8 @@ export function GatePage() {
   const [detailError, setDetailError] = useState<unknown>(null);
   const [simulatedOutcome, setSimulatedOutcome] =
     useState<IdentityOutcome>("SIMULATED_MATCH");
+  const [scanPhase, setScanPhase] = useState<ScanPhase>("idle");
+  const scanRunRef = useRef(0);
   const [check, setCheck] = useState<IdentityCheckDto | null>(null);
   const [checkBusy, setCheckBusy] = useState(false);
   const [checkError, setCheckError] = useState<unknown>(null);
@@ -66,6 +80,8 @@ export function GatePage() {
     setRelease(null);
     setReleaseKey(null);
     setReleaseError(null);
+    scanRunRef.current += 1;
+    setScanPhase("idle");
     try {
       const result = await api.gateVisit(id);
       setVisit(result.visit);
@@ -79,6 +95,10 @@ export function GatePage() {
   useEffect(() => {
     void loadVisits();
   }, [loadVisits]);
+
+  useEffect(() => () => {
+    scanRunRef.current += 1;
+  }, []);
 
   useEffect(() => {
     if (!selectedId && visits.length > 0) {
@@ -98,21 +118,46 @@ export function GatePage() {
   };
 
   const runCheck = async (): Promise<void> => {
-    if (!visit) {
+    if (!visit || scanPhase !== "idle") {
       return;
     }
+    const runId = scanRunRef.current + 1;
+    scanRunRef.current = runId;
     setCheckBusy(true);
     setCheckError(null);
+    setCheck(null);
     setRelease(null);
     setReleaseKey(null);
     setReleaseError(null);
+    setScanPhase("positioning");
     try {
-      const result = await api.identityCheck(visit.id, simulatedOutcome);
+      await wait(900);
+      if (scanRunRef.current !== runId) {
+        return;
+      }
+      setScanPhase("capturing");
+      await wait(900);
+      if (scanRunRef.current !== runId) {
+        return;
+      }
+      setScanPhase("comparing");
+      const [result] = await Promise.all([
+        api.identityCheck(visit.id, simulatedOutcome),
+        wait(700),
+      ]);
+      if (scanRunRef.current !== runId) {
+        return;
+      }
       setCheck(result.check);
     } catch (caught) {
-      setCheckError(caught);
+      if (scanRunRef.current === runId) {
+        setCheckError(caught);
+      }
     } finally {
-      setCheckBusy(false);
+      if (scanRunRef.current === runId) {
+        setScanPhase("idle");
+        setCheckBusy(false);
+      }
     }
   };
 
@@ -141,6 +186,8 @@ export function GatePage() {
   };
 
   const outcomeChanged = (value: IdentityOutcome): void => {
+    scanRunRef.current += 1;
+    setScanPhase("idle");
     setSimulatedOutcome(value);
     setCheck(null);
     setCheckError(null);
@@ -148,6 +195,8 @@ export function GatePage() {
     setReleaseKey(null);
     setReleaseError(null);
   };
+
+  const scanBusy = scanPhase !== "idle";
 
   const alreadyAuthorized =
     visit?.lastReleaseDecision === "AUTHORIZED" && release === null;
@@ -161,8 +210,9 @@ export function GatePage() {
           title="Conferência e liberação"
           description={
             <p>
-              Interface operacional demonstrativa. O backend revalida estado, vínculo da
-              conferência, versão e idempotência antes de qualquer decisão.
+              Interface operacional demonstrativa. A verificação facial é apenas um
+              simulador visual, sem câmera ou imagem, e o backend revalida estado,
+              vínculo da conferência, versão e idempotência antes de qualquer decisão.
             </p>
           }
           actions={
@@ -330,8 +380,8 @@ export function GatePage() {
                   <div className="device-step__header">
                     <span className="step-marker step-marker--dark">01</span>
                     <div>
-                      <h3 id="step-check-title">Conferência de identidade</h3>
-                      <p>Adaptador fake · nenhuma câmera é acessada</p>
+                      <h3 id="step-check-title">Verificação facial simulada</h3>
+                      <p>Painel de demonstração · sem câmera e sem imagem</p>
                     </div>
                   </div>
 
@@ -342,6 +392,7 @@ export function GatePage() {
                       onChange={(event) =>
                         outcomeChanged(event.target.value as IdentityOutcome)
                       }
+                      disabled={scanBusy}
                     >
                       {outcomeOptions.map((outcome) => (
                         <option key={outcome} value={outcome}>
@@ -353,6 +404,34 @@ export function GatePage() {
                       Controle exclusivo da demonstração. Não representa biometria real.
                     </span>
                   </label>
+
+                  <div
+                    className={`face-sim ${
+                      check ? `face-sim--${check.outcome.toLowerCase()}` : ""
+                    }`}
+                    data-phase={scanPhase}
+                    aria-hidden="true"
+                  >
+                    <div className="face-sim__frame">
+                      <span className="face-sim__corner face-sim__corner--tl" />
+                      <span className="face-sim__corner face-sim__corner--tr" />
+                      <span className="face-sim__corner face-sim__corner--bl" />
+                      <span className="face-sim__corner face-sim__corner--br" />
+                      <span className="face-sim__avatar">
+                        <Icon name="user" size={76} />
+                      </span>
+                      <span className="face-sim__scanline" />
+                      <span className="face-sim__tag">SIMULADO</span>
+                    </div>
+                  </div>
+
+                  <p className="face-sim__status" role="status" aria-live="polite">
+                    {scanPhase === "idle"
+                      ? check
+                        ? OUTCOME_LABELS[check.outcome]
+                        : "Simulador pronto. Nenhuma câmera é acessada."
+                      : SCAN_PHASE_LABELS[scanPhase]}
+                  </p>
 
                   {checkError ? <ErrorNotice error={checkError} /> : null}
 
@@ -389,13 +468,18 @@ export function GatePage() {
                     onClick={() => void runCheck()}
                     disabled={checkBusy || !visit.eligible}
                   >
-                    <Icon name="camera-off" size={17} />
-                    {checkBusy
-                      ? "Registrando…"
+                    <Icon name="scan-face" size={17} />
+                    {scanBusy
+                      ? "Verificando rosto simulado…"
                       : check
-                        ? "Registrar nova conferência"
-                        : "Registrar conferência simulada"}
+                        ? "Repetir verificação facial simulada"
+                        : "Iniciar verificação facial simulada"}
                   </button>
+                  <p className="device-note">
+                    <Icon name="camera-off" size={14} />
+                    Simulação visual: nenhuma câmera é acessada e nenhuma imagem é
+                    capturada, enviada ou armazenada.
+                  </p>
                 </section>
 
                 <section className="device-step" aria-labelledby="step-release-title">
@@ -511,7 +595,7 @@ export function GatePage() {
               </li>
               <li>
                 <span>02</span>
-                A verificação não altera o estado da visita.
+                A verificação facial é simulada: sem câmera, imagem ou biometria real.
               </li>
               <li>
                 <span>03</span>

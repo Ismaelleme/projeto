@@ -20,9 +20,15 @@ transformar simulação em autorização.
   `physicalAccessPerformed=false`.
 - `SIMULATED_NO_MATCH` e resultados incertos geram `DENIED`, sem efeito físico.
 - Se `APP_ENV=production`, a aplicação se recusa a iniciar.
+- A UI da portaria exibe um painel visual de captura facial explicitamente rotulado como
+  `SIMULADO`, com etapas animadas e cenário controlado. O painel não acessa a câmera,
+  não captura, não persiste e não transmite imagens; é apenas representação da chamada
+  ao adaptador simulado.
 
 ## Consequências
 
 - A demo cobre caminhos positivos e negativos sem alegar biometria real.
 - O adaptador pode ser substituído no futuro sem alterar as regras de domínio.
 - Nenhum texto de UI ou auditoria afirma abertura de catraca.
+- O simulador visual não altera contrato de API, schema ou auditoria, e permanece
+  coberto pelo bloqueio de câmera (`Permissions-Policy: camera=()`).

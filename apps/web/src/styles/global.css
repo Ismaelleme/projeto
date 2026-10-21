@@ -2546,6 +2546,192 @@ code {
   font-size: 9px;
 }
 
+.face-sim {
+  position: relative;
+  margin: 12px 0 4px;
+  padding: 10px;
+  background: #0b1a13;
+  border: 1px solid #2b4034;
+  border-radius: 6px;
+}
+
+.face-sim__frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 208px;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 50% 38%,
+      rgba(230, 173, 40, 0.12),
+      transparent 62%
+    ),
+    #071009;
+  border: 1px dashed #2b4034;
+  border-radius: 4px;
+}
+
+.face-sim__corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--amber);
+  opacity: 0.85;
+}
+
+.face-sim__corner--tl {
+  top: 8px;
+  left: 8px;
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 3px;
+}
+
+.face-sim__corner--tr {
+  top: 8px;
+  right: 8px;
+  border-left: 0;
+  border-bottom: 0;
+  border-top-right-radius: 3px;
+}
+
+.face-sim__corner--bl {
+  bottom: 8px;
+  left: 8px;
+  border-right: 0;
+  border-top: 0;
+  border-bottom-left-radius: 3px;
+}
+
+.face-sim__corner--br {
+  bottom: 8px;
+  right: 8px;
+  border-left: 0;
+  border-top: 0;
+  border-bottom-right-radius: 3px;
+}
+
+.face-sim__avatar {
+  display: grid;
+  place-items: center;
+  width: 116px;
+  height: 116px;
+  color: #7f9a8b;
+  background: rgba(132, 149, 138, 0.08);
+  border: 1px solid #2b4034;
+  border-radius: 50%;
+}
+
+.face-sim__scanline {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 12%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  box-shadow: 0 0 12px rgba(230, 173, 40, 0.65);
+  opacity: 0;
+}
+
+.face-sim[data-phase="positioning"] .face-sim__scanline,
+.face-sim[data-phase="capturing"] .face-sim__scanline,
+.face-sim[data-phase="comparing"] .face-sim__scanline {
+  opacity: 1;
+  animation: face-scan 1.6s ease-in-out infinite;
+}
+
+.face-sim[data-phase="positioning"] .face-sim__corner,
+.face-sim[data-phase="capturing"] .face-sim__corner,
+.face-sim[data-phase="comparing"] .face-sim__corner {
+  opacity: 1;
+  animation: face-corner 1.1s ease-in-out infinite;
+}
+
+.face-sim__tag {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  padding: 2px 6px;
+  background: rgba(230, 173, 40, 0.14);
+  border: 1px solid rgba(230, 173, 40, 0.45);
+  border-radius: 2px;
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.face-sim--simulated_match {
+  border-color: rgba(88, 200, 134, 0.5);
+}
+
+.face-sim--simulated_match .face-sim__corner {
+  border-color: var(--success);
+}
+
+.face-sim--simulated_match .face-sim__avatar {
+  color: var(--success);
+  border-color: rgba(88, 200, 134, 0.5);
+}
+
+.face-sim--simulated_no_match {
+  border-color: rgba(214, 90, 78, 0.5);
+}
+
+.face-sim--simulated_no_match .face-sim__corner {
+  border-color: var(--danger);
+}
+
+.face-sim--simulated_no_match .face-sim__avatar {
+  color: var(--danger);
+  border-color: rgba(214, 90, 78, 0.5);
+}
+
+.face-sim--inconclusive,
+.face-sim--error,
+.face-sim--unavailable {
+  border-color: rgba(230, 173, 40, 0.5);
+}
+
+.face-sim--inconclusive .face-sim__avatar,
+.face-sim--error .face-sim__avatar,
+.face-sim--unavailable .face-sim__avatar {
+  color: var(--amber-2);
+}
+
+.face-sim__status {
+  min-height: 15px;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+@keyframes face-scan {
+  0% {
+    top: 12%;
+    opacity: 0.25;
+  }
+
+  50% {
+    top: 86%;
+    opacity: 1;
+  }
+
+  100% {
+    top: 12%;
+    opacity: 0.25;
+  }
+}
+
+@keyframes face-corner {
+  50% {
+    opacity: 0.35;
+  }
+}
+
 .device-note {
   display: flex;
   align-items: flex-start;
@@ -3113,6 +3299,20 @@ code {
 
   .gate-detail-grid__wide {
     grid-column: auto;
+  }
+
+  .face-sim__frame {
+    height: 168px;
+  }
+
+  .face-sim__avatar {
+    width: 96px;
+    height: 96px;
+  }
+
+  .face-sim__avatar svg {
+    width: 62px;
+    height: 62px;
   }
 
   .release-result__meta {

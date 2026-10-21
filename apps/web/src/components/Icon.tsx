@@ -14,6 +14,7 @@ export type IconName =
   | "refresh"
   | "shield"
   | "camera-off"
+  | "scan-face"
   | "search"
   | "chevron-right"
   | "sun";
@@ -82,6 +83,13 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M9 5h6l1.5 2H21v11H7.5" />
       <path d="M3 8v10h3" />
       <circle cx="12.5" cy="12.5" r="3" />
+    </>
+  ),
+  "scan-face": (
+    <>
+      <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+      <path d="M9 10.5h.01M15 10.5h.01" />
+      <path d="M9.5 15c.8.7 1.6 1 2.5 1s1.7-.3 2.5-1" />
     </>
   ),
   search: (

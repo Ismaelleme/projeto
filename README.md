@@ -14,6 +14,8 @@ físico. Toda verificação é `SIMULATED` e `physicalAccessPerformed` é sempre
 
 - Uso exclusivo com dados sintéticos. Não informe dados pessoais reais.
 - Nenhum RG, imagem, selfie ou biometria real é solicitado, coletado ou armazenado.
+- A verificação facial da portaria é um simulador visual: nenhuma câmera é acessada e
+  nenhuma imagem é capturada, enviada ou armazenada.
 - O CPF é validado no backend e persistido apenas como HMAC + dois últimos dígitos.
 - Nenhum SDK, webhook ou comando Hikvision é usado.
 - A liberação é apenas um registro lógico no backend; nenhum equipamento é acionado.
@@ -78,7 +80,7 @@ gera um segredo efêmero a cada início e avisa no log.
 |---|---|---|---|
 | Visitante | `visitante@demo.local` | `Demo@1234` | Criar e acompanhar solicitações. |
 | Analista | `analista@demo.local` | `Demo@1234` | Fila, detalhe e decisão. |
-| Portaria | `portaria@demo.local` | `Demo@1234` | Conferência simulada e liberação virtual. |
+| Portaria | `portaria@demo.local` | `Demo@1234` | Verificação facial simulada (sem câmera) e liberação virtual. |
 | Auditoria | `auditor@demo.local` | `Demo@1234` | Consulta da trilha de auditoria. |
 
 O seed cria três visitas sintéticas: duas aguardando análise e uma já aprovada para
@@ -88,8 +90,9 @@ testar a portaria imediatamente.
 
 1. Entre como visitante, use **Preencher exemplo**, aceite o aviso e envie a solicitação.
 2. Saia e entre como analista; abra a solicitação na fila e clique em **Aprovar visita**.
-3. Saia e entre como portaria; busque pelo código `VIS-...`, registre a conferência
-   simulada e solicite a liberação virtual.
+3. Saia e entre como portaria; busque pelo código `VIS-...`, inicie a verificação facial
+   simulada (painel animado, sem câmera), escolha o cenário e solicite a liberação
+   virtual.
 4. Saia e entre como auditoria; confira os eventos de criação, decisão, conferência,
    liberação e consulta auditada.
 
@@ -113,7 +116,7 @@ testar a portaria imediatamente.
 | `GET /api/v1/internal/audit-events` | auditoria | Trilha redigida e filtros. |
 | `GET /api/v1/gate/visits` | portaria | Visitas aprovadas elegíveis. |
 | `POST /api/v1/gate/visits/lookup` | portaria | Busca por código. |
-| `POST /api/v1/gate/visits/:id/identity-checks` | portaria | Conferência `SIMULATED`. |
+| `POST /api/v1/gate/visits/:id/identity-checks` | portaria | Verificação facial `SIMULATED`. |
 | `POST /api/v1/gate/virtual-releases` | portaria | Liberação virtual idempotente. |
 
 ## Scripts
@@ -159,8 +162,8 @@ Validação executada neste incremento:
 - `npm.cmd test`: 16 testes aprovados.
 - `npm.cmd run build`: build de produção da web gerada com sucesso.
 - Smoke test real com navegador (Edge headless): login dos quatro perfis, criação,
-  aprovação, conferência, liberação autorizada, auditoria e rota 404, sem erros de
-  console e sem overflow horizontal em 390px.
+  aprovação, verificação facial simulada (painel animado), liberação autorizada,
+  auditoria e rota 404, sem erros de console e sem overflow horizontal em 390px.
 
 ## Fora do escopo
 
